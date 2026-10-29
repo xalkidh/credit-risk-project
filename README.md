@@ -94,3 +94,17 @@ Total ECL is 72.5M on 461.7M of exposure (15.7%). Stage 2 clients carry about ha
 - `outputs/`: tables exported for the dashboard
 - `dashboard/`: Power BI file and PDF export
 - `images/`: dashboard screenshots
+
+## How to run
+
+```bash
+git clone https://github.com/xalkidh/credit-risk-project.git
+cd credit-risk-project
+python3 -m venv .venv
+source .venv/bin/activate   # Windows PowerShell: .venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+python scripts/prepare_data.py
+jupyter notebook
+```
+
+Then run `notebooks/01_eda.ipynb` and `notebooks/02_modelling.ipynb` from top to bottom. The second notebook writes the tables in `outputs/`, which are the data sources of the Power BI dashboard in `dashboard/` (Power BI Desktop, Windows only).
