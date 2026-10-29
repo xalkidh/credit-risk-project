@@ -75,3 +75,22 @@ Total ECL is 72.5M on 461.7M of exposure (15.7%). Stage 2 clients carry about ha
 - In synthetic deterioration scenarios (a share of clients gets PAY_1 increased by 1 or 2 months), the PSI of PAY_1 crosses the 0.10 warning level before the PSI of the PD score does (40% of clients, +1 month: 0.21 vs 0.05).
 - With +2 months for 40% of clients, the score PSI reaches 0.28 (above the 0.25 alert level) and the mean PD rises from 22% to 34%.
 - This shows why input variables should be monitored together with the score.
+
+## Assumptions and limitations
+
+- **Public dataset, not a bank portfolio.** The data are credit card clients in Taiwan, with a 22% default rate and amounts in NT$. A real retail portfolio would have a much lower default rate, so the ECL levels and stage sizes here are not representative of a bank balance sheet.
+- **No out-of-time validation.** The dataset has no dates per client, so the test set is a random split and not a later period. A production backtest would be out-of-time. The results come from a single split, so differences in the second decimal should not be over-interpreted.
+- **PD horizon.** The target is default in the next month. IFRS 9 requires 12-month PD for Stage 1 and lifetime PD for Stage 2, so the ECL figures are a simplified illustration. Lifetime PD (for example with survival analysis) is a natural next step.
+- **IFRS 9 rules are assumptions.** Stage 3 = 3 or more months past due, Stage 2 = 1 to 2 months past due or PD of at least 50% (the SICR threshold is an assumption), Stage 1 = the rest. Stage 3 PD is set to 1, so its 75% coverage equals LGD by construction.
+- **LGD and EAD are assumed, not estimated.** LGD is fixed at 75% for unsecured card exposure, and EAD is the latest bill amount (negative balances set to zero).
+- **Undocumented codes.** PAY_1 to PAY_6 contain the codes -2, -1 and 0, which are not defined in the dataset documentation. They are kept as ordinal values.
+- **Stress scenarios are synthetic.** They add 1 or 2 months to PAY_1 for a random share of clients. They illustrate how PSI reacts and are not real drift.
+- **Fairness.** SEX is excluded from the models. EDUCATION and MARRIAGE are kept, and in a real setting their use would need a separate fairness and regulatory review.
+
+## Repository structure
+
+- `notebooks/01_eda.ipynb`: data exploration and correlation heatmap
+- `notebooks/02_modelling.ipynb`: models, evaluation, calibration, SHAP, IFRS 9, PSI and stress scenarios
+- `outputs/`: tables exported for the dashboard
+- `dashboard/`: Power BI file and PDF export
+- `images/`: dashboard screenshots
