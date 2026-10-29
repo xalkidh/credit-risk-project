@@ -34,3 +34,44 @@ Data cleaning:
 5. **Explainability:** SHAP values for the gradient boosting model, explaining the predicted PD.
 6. **IFRS 9 (simplified):** staging rules and ECL = PD x LGD x EAD.
 7. **Monitoring:** Population Stability Index (PSI) of the PD score and of the input variables, plus synthetic deterioration scenarios.
+
+## Results
+
+### Model performance (test set, 9,000 clients)
+
+| Model | AUC | Gini | KS | Brier |
+|---|---|---|---|---|
+| Logistic regression | 0.714 | 0.427 | 0.372 | 0.146 |
+| Logistic regression + engineered features | 0.749 | 0.498 | 0.398 | 0.142 |
+| Gradient boosting | 0.776 | 0.552 | 0.419 | 0.136 |
+| Gradient boosting + engineered features | 0.779 | 0.558 | 0.419 | 0.135 |
+
+- Gradient boosting separates good and bad clients clearly better than the baseline.
+- Feature engineering lifts the logistic regression Gini by about 0.07, closing roughly half of the gap to gradient boosting. For gradient boosting the change is negligible (+0.006 Gini, same KS), because it already finds these interactions from the raw columns.
+
+### Calibration
+
+- Both models are well calibrated on average: mean predicted PD is 0.221 (logistic regression) and 0.220 (gradient boosting) against an observed default rate of 0.221.
+- Gradient boosting follows the observed default rate closely across 10 equal-sized PD bins (for example 0.704 predicted vs 0.696 observed in the riskiest bin) and has the lower Brier score.
+- Logistic regression underestimates risk in the lowest bin (4.4% predicted vs 12.8% observed) and overestimates it in the middle of the range.
+
+### Explainability
+
+SHAP values show that the most recent repayment status (PAY_1) is by far the strongest driver of the predicted PD (mean absolute SHAP of about 0.08), followed by the credit limit (LIMIT_BAL). The other variables contribute much less individually.
+
+### IFRS 9 staging and expected credit loss (simplified)
+
+| Stage | Clients | Mean PD | Total EAD (NT$) | Total ECL (NT$) | Coverage |
+|---|---|---|---|---|---|
+| 1 | 6,972 | 13.8% | 370.1M | 31.2M | 8.4% |
+| 2 | 1,873 | 48.5% | 83.9M | 35.5M | 42.2% |
+| 3 | 155 | 70.8% | 7.7M | 5.8M | 75.0% |
+
+Total ECL is 72.5M on 461.7M of exposure (15.7%). Stage 2 clients carry about half of the total ECL with less than a fifth of the exposure. Mean PD and observed default rate rise together from Stage 1 to Stage 3.
+
+### Monitoring: PSI and stress scenarios
+
+- Train vs test PSI is 0.0014 for the PD score and below 0.003 for every input variable, as expected for a random split.
+- In synthetic deterioration scenarios (a share of clients gets PAY_1 increased by 1 or 2 months), the PSI of PAY_1 crosses the 0.10 warning level before the PSI of the PD score does (40% of clients, +1 month: 0.21 vs 0.05).
+- With +2 months for 40% of clients, the score PSI reaches 0.28 (above the 0.25 alert level) and the mean PD rises from 22% to 34%.
+- This shows why input variables should be monitored together with the score.
